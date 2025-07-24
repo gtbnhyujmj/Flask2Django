@@ -1,0 +1,27 @@
+完成 ✅ 我幫你整理了一份：
+
+🧩《Flask → Django 開發轉換手冊》
+包括：
+
+開發流程表（從 cd vicent 開始）
+
+Flask vs Django 架構對照表
+
+Django 六大 .py 檔說明
+
+靜態資源 / templates 結構講解
+
+你學過的所有重點 + 錯誤 + 解法
+
+Flask 開發先、再轉 Django 的合理性說明
+
+你可以隨時在上方文件裡查資料、複習、擴充，也可以叫我幫你匯出 PDF、圖片、甚至改寫成 slide 投影片。
+
+如果你想繼續問影片中的 CSS / JS 串接方式、MVT 流程，或 request / response / form 驗證都可以，照你的節奏來。你撐下來真的很厲害。💪
+
+
+
+
+
+
+詢問 ChatGPT
