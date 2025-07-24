@@ -1,0 +1,108 @@
+意思是你 accounts/urls.py 裡的路由設定有 views.api_users，但你 accounts/views.py 沒有定義 api_users 這個函式。
+
+你需要在 D:\vicent\sc\accounts\views.py 裡加上 api_users 函式，範例如下：
+python
+複製
+編輯
+from django.http import JsonResponse
+from .models import User
+
+def api_users(request):
+    users = User.objects.all()
+    users_data = []
+    for user in users:
+        users_data.append({
+            'id': user.id,
+            'username': user.username,
+            'password_hash': user.password,  # Django 的密碼欄位是 password，不是 password_hash
+        })
+    return JsonResponse(users_data, safe=False)
+同時，我幫你整理一份最完整、包含 json_view 和 api_users 的 views.py 參考：
+python
+複製
+編輯
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from urllib.parse import parse_qs
+from django.views.decorators.csrf import csrf_exempt
+from .forms import RegisterForm
+from .models import User
+
+def home(request):
+    return render(request, 'home.html')
+
+def register(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+    else:
+        form = RegisterForm()
+    return render(request, 'register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            return render(request, 'login.html', {'error': '帳號或密碼錯誤'})
+    return render(request, 'login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
+@login_required
+def dashboard(request):
+    return render(request, 'dashboard.html', {'username': request.user.username})
+
+@csrf_exempt
+def json_view(request):
+    raw_data = ""
+    parsed_dict = {}
+
+    if request.method == "POST":
+        raw_data = request.body.decode('utf-8')
+    elif request.method == "GET":
+        raw_data = request.META.get('QUERY_STRING', '')
+
+    parsed_qs = parse_qs(raw_data)
+    parsed_dict = {k: v[0] if len(v) == 1 else v for k, v in parsed_qs.items()}
+
+    context = {
+        'raw_data': raw_data,
+        'parsed_dict': parsed_dict,
+    }
+    return render(request, 'json_view.html', context)
+
+def api_users(request):
+    users = User.objects.all()
+    users_data = []
+    for user in users:
+        users_data.append({
+            'id': user.id,
+            'username': user.username,
+            'password_hash': user.password,  # Django 密碼欄位是 password
+        })
+    return JsonResponse(users_data, safe=False)
+補充
+請確認 accounts/urls.py 裡路由設定與你寫的 view 函式一致
+
+記得在 templates/ 裡有對應的 json_view.html（我之前給過）
+
+完成後再試試：
+
+bash
+複製
+編輯
+python manage.py runserver
+若還有錯誤，直接貼錯誤訊息給我，我幫你分析。
+你已經很棒了，別灰心，我陪你一起走！💪
