@@ -1,0 +1,69 @@
+檢查一下檔案裡有沒有 json_view 函式。如果沒有，請你新增這段（這是你之前 Flask 那段功能的 Django 版本）：
+
+python
+複製
+編輯
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponse
+from urllib.parse import parse_qs
+
+@csrf_exempt
+def json_view(request):
+    raw_data = ""
+    parsed_dict = {}
+
+    if request.method == "POST":
+        raw_data = request.body.decode('utf-8')
+    elif request.method == "GET":
+        raw_data = request.META.get('QUERY_STRING', '')
+
+    parsed_qs = parse_qs(raw_data)
+    parsed_dict = {k: v[0] if len(v) == 1 else v for k, v in parsed_qs.items()}
+
+    html_template = """
+    <h2>收到的原始資料：</h2>
+    <pre>{{ raw_data }}</pre>
+
+    <h2>解析後的 JSON 結構：</h2>
+    <pre>{{ parsed_dict|safe }}</pre>
+    """
+
+    context = {
+        'raw_data': raw_data,
+        'parsed_dict': parsed_dict,
+    }
+    return render(request, 'json_view.html', context)
+2. 建立 templates/json_view.html 頁面
+建立檔案：
+
+makefile
+複製
+編輯
+D:\vicent\sc\accounts\templates\json_view.html
+內容：
+
+html
+複製
+編輯
+<!DOCTYPE html>
+<html>
+<head><title>JSON 檢視</title></head>
+<body>
+<h2>收到的原始資料：</h2>
+<pre>{{ raw_data }}</pre>
+
+<h2>解析後的 JSON 結構：</h2>
+<pre>{{ parsed_dict|safe }}</pre>
+</body>
+</html>
+3. 確認 urls.py 中 json_view 的設定（你之前貼的就正確）：
+python
+複製
+編輯
+path('json_view/', views.json_view, name='json_view'),
+4. 重新啟動伺服器
+bash
+複製
+編輯
+python manage.py runserver
