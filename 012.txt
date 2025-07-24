@@ -1,0 +1,151 @@
+Flask + Django 開發對照與學習總整理
+
+💡 一、整體觀念對照：Flask vs Django
+
+項目
+
+Flask
+
+Django
+
+架構風格
+
+自由、彈性高
+
+嚴謹、強制分層（MTV）
+
+專案初始化
+
+app.py 自己寫
+
+django-admin startproject
+
+資料庫
+
+SQLAlchemy 自行設定
+
+內建 ORM (models.py)
+
+路由設定
+
+@app.route()
+
+urls.py 逐層註冊
+
+表單驗證
+
+自己寫 / WTForms
+
+forms.py (ModelForm)
+
+使用者登入
+
+Flask-Login 或手刻
+
+django.contrib.auth 內建帳號系統
+
+模板引擎
+
+Jinja2
+
+Django Templates（語法類似）
+
+管理後台
+
+沒有，需要自己刻
+
+自動產生 /admin/ 後台管理介面
+
+適合對象
+
+個人專案、MVP 雛型
+
+商業專案、中大型團隊合作
+
+🧱 二、Django 專案架構流程圖
+
+myproject/                 ← 專案根目錄
+├── manage.py             ← 專案管理指令（啟動伺服器、遷移資料庫）
+├── db.sqlite3            ← 資料庫
+├── templates/            ← 所有共用 HTML 模板
+├── static/               ← 前端靜態資源（CSS、JS、images）
+│   ├── css/
+│   ├── js/
+│   └── images/
+├── myproject/            ← 專案主設定包（與根目錄同名）
+│   ├── __init__.py
+│   ├── settings.py       ← 全域設定（資料庫、語言、template 位置）
+│   ├── urls.py           ← 全域路由（include 各 app）
+│   └── wsgi.py / asgi.py
+└── accounts/             ← 你自己建立的 app（管理帳號功能）
+    ├── models.py         ← 資料表結構定義
+    ├── views.py          ← 處理網頁邏輯（函式型 views）
+    ├── urls.py           ← 對應 views 的網址設定
+    ├── forms.py          ← 表單驗證邏輯（可選）
+    ├── templates/
+    │   └── accounts/     ← 此 app 專屬模板
+    │       ├── login.html
+    │       ├── register.html
+    │       └── dashboard.html
+    └── admin.py          ← 註冊模型讓後台可以用
+
+🛠️ 三、你實作流程與學習進度整理
+
+✅ 已完成事項：
+
+
+
+❗ 中間出現的錯誤（已解決）
+
+Django migration 歷史不一致
+
+views.json_view / api_users 找不到（漏寫）
+
+render 未 import
+
+靜態檔案路徑錯誤（少設定 STATICFILES_DIRS）
+
+📚 四、關鍵概念彙整（問答重點）
+
+1. urls.py 是做什麼的？
+
+決定「網址對應到哪個 view 函式」的地方。像 Flask 的 @app.route()。
+
+2. settings.py 是什麼？
+
+全專案的設定檔，像是 Django 的心臟。包含資料庫、語言、時區、模板、靜態路徑等。
+
+3. workon 是什麼？
+
+是 virtualenvwrapper 工具提供的指令，快速切換虛擬環境。你用的是 venv，所以不用它。
+
+4. os.path.join(BASE_DIR, 'templates') 這段？
+
+組合出絕對路徑，讓 Django 找得到模板資料夾。不寫會找不到 HTML。
+
+5. 為什麼 Django 不自己幫我建好 static_root？
+
+因為 Django 預設 static/ 資源只會在 debug 模式提供，正式部署會由 nginx 等伺服器處理，所以要明確告訴 Django 靜態路徑在哪裡。
+
+6. 為什麼 urls.py 和 views.py 要寫兩次一樣的東西？
+
+不是重複，而是分工。urls 決定「這個網址要去哪」，views 決定「去了以後做什麼」。這是 Django 的結構強制分層思想。
+
+✅ 推薦你現在的做法：
+
+用 Flask 當 prototype，熟悉功能
+
+學會 Django 架構、規則後，再轉正式版
+
+先理解，再記憶，搭配對照表查詢不怕忘
+
+📌 如果你還想要：
+
+Flask ⇄ Django 對照小抄（語法與功能）
+
+Django 路由與資料流程圖
+
+Django static 與 template 範例架構圖
+
+跟我說，我可以繼續補上圖或表格給你。
+
