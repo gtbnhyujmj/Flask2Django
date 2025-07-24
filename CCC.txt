@@ -1,0 +1,14 @@
+哪個路徑的view.py?
+
+
+ChatGPT 說：
+你要改的 views.py 是 Django 專案裡的 App 的檔案，也就是：
+
+makefile
+複製
+編輯
+D:\vicent\sc\accounts\views.py
+這是你剛剛建立的 accounts app 裡的 views.py，裡面會放你的註冊、登入、會員中心等功能。
+
+你就把 dashboard 函式加在這個檔案裡就對了！
+需要我幫你示範完整的 views.py 範例嗎？
