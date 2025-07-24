@@ -1,0 +1,227 @@
+這是一個完整的教學，會一步步帶你把 Flask 的帳號管理系統重構成 Django 版本，專案名稱為 sc，並說明虛擬環境、資料夾結構、要打開和編輯哪些檔案。
+
+✅ 第一步：建立虛擬環境與安裝 Django
+打開 Terminal，輸入以下指令：
+
+bash
+複製
+編輯
+python3 -m venv venv
+source venv/bin/activate  # Windows 用戶請改用 venv\Scripts\activate
+pip install django
+確認安裝成功：
+
+bash
+複製
+編輯
+python -m django --version
+✅ 第二步：建立 Django 專案與應用程式
+bash
+複製
+編輯
+django-admin startproject sc
+cd sc
+python manage.py startapp accounts
+結構會變成這樣：
+
+複製
+編輯
+sc/
+├── accounts/        ← 我們主要的帳號 app（原 Flask 功能都搬這裡）
+├── sc/              ← 專案設定資料夾
+├── manage.py
+✅ 第三步：設定資料庫與註冊 App
+編輯 sc/settings.py，找到 INSTALLED_APPS，加入：
+
+python
+複製
+編輯
+INSTALLED_APPS = [
+    ...
+    'accounts',
+]
+同時確認資料庫設定（預設就是 SQLite）：
+
+python
+複製
+編輯
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+✅ 第四步：建立 User 模型（參考 Flask 的 User）
+打開 accounts/models.py，內容如下：
+
+python
+複製
+編輯
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+class User(AbstractUser):
+    accountID = models.IntegerField(null=True, blank=True)
+然後在 sc/settings.py 指定這個模型作為預設 User：
+
+python
+複製
+編輯
+AUTH_USER_MODEL = 'accounts.User'
+✅ 第五步：建立表單與註冊頁面
+建立 accounts/forms.py：
+
+python
+複製
+編輯
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import User
+
+class RegisterForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'password1', 'password2']
+✅ 第六步：設定 view 和 url
+🔹建立 view
+打開 accounts/views.py：
+
+python
+複製
+編輯
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from .forms import RegisterForm
+from .models import User
+from urllib.parse import parse_qs
+from django.http import JsonResponse, HttpResponse
+
+def home(request):
+    return render(request, 'home.html')
+
+def register(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+    else:
+        form = RegisterForm()
+    return render(request, 'register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            return render(request, 'login.html', {'error': '帳號或密碼錯誤'})
+    return render(request, 'login.html')
+
+@login_required
+def dashboard(request):
+    return render(request, 'dashboard.html', {'username': request.user.username})
+
+@login_required
+def api_users(request):
+    users = User.objects.all().values('id', 'username', 'password')
+    return JsonResponse(list(users), safe=False)
+
+def json_view(request):
+    if request.method == "POST":
+        raw_data = request.body.decode("utf-8")
+    else:
+        raw_data = request.META.get('QUERY_STRING', '')
+
+    parsed_qs = parse_qs(raw_data)
+    parsed_dict = {k: v[0] if len(v) == 1 else v for k, v in parsed_qs.items()}
+
+    return render(request, 'json_view.html', {
+        'raw_data': raw_data,
+        'parsed_dict': parsed_dict
+    })
+🔹設定 URL
+打開 accounts/urls.py（自己新增這個檔案）：
+
+python
+複製
+編輯
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.home, name='home'),
+    path('register/', views.register, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('json_view/', views.json_view, name='json_view'),
+    path('api/users/', views.api_users, name='api_users'),
+]
+然後在 sc/urls.py 中加入：
+
+python
+複製
+編輯
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('accounts.urls')),
+]
+✅ 第七步：建立 template 與啟動服務
+在 accounts/ 底下建立資料夾 templates/ 和以下 HTML 檔案：
+
+arduino
+複製
+編輯
+accounts/templates/
+├── home.html
+├── login.html
+├── register.html
+├── dashboard.html
+├── json_view.html
+然後在 settings.py 設定 templates 目錄（Django 會自動找到 app 裡的 templates）
+
+啟動資料庫：
+
+bash
+複製
+編輯
+python manage.py makemigrations
+python manage.py migrate
+啟動伺服器：
+
+bash
+複製
+編輯
+python manage.py runserver
+✅ 最後：管理者帳號與 admin
+bash
+複製
+編輯
+python manage.py createsuperuser
+可以用 /admin/ 進入後台查看 User 資料表。
+
+✅ 加分功能：新增欄位 accountID
+你已經在模型裡面加了 accountID，只要重新遷移一次：
+
+bash
+複製
+編輯
+python manage.py makemigrations accounts
+python manage.py migrate
+如果你需要我幫你補齊 templates/*.html 裡的內容、CSS、API 整合範例，我可以接續幫你寫下去。要嗎？
+
+
+
+
+
+
+
+你說：
